@@ -17,6 +17,7 @@ const webpackConfig = {
   },
   resolve: {
     alias: config.alias,
+    extensions: ['.jsx', '.js', '.vue', '.json'],
     modules: ['node_modules'],
   },
   devServer: {
@@ -58,6 +59,7 @@ const webpackConfig = {
       template: path.resolve(__dirname, '../examples/index.html'), // 指定模版文件
       filename: 'index.html', // 产出后的文件名
     }),
+    // 分离css
     new MiniCssExtractPlugin({
       filename: 'css/[name].[contenthash:7].css',
       chunkFilename: '[id].css',

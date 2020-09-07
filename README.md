@@ -5,6 +5,7 @@ babel:
     @babel/core
     babel-preset-env
     babel-loader
+    babel-plugin-transform-vue-jsx babel-plugin-syntax-jsx 解析jsx,前一个插件依赖后面插件
 plugins:
     html-webpack-plugin
     clean-webpack-plugin
@@ -22,7 +23,7 @@ loader:
 vue:
     vue 
     vue-loader vue-template-compiler
-    vue-router
+    vue-router devDependencies
     
 cross-env
 element-ui

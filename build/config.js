@@ -1,7 +1,9 @@
 const path = require('path');
 
 exports.alias = {
-  '@element-ui': 'node_modules/element-ui/lib'
+  '@src': path.resolve(__dirname, '../src'),
+  '@packages': path.resolve(__dirname, '../packages'),
+  '@examples': path.resolve(__dirname, '../examples'),
 };
 
 exports.jsexclude = /node_modules/;

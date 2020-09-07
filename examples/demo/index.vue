@@ -1,9 +1,11 @@
 <template>
-  <router-view />
+  <div>
+    <cm-table />
+  </div>
 </template>
 
 <script>
 export default {
-  name: 'App',
+  name: 'Demo',
 }
 </script>
