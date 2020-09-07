@@ -8,9 +8,10 @@ babel:
     babel-plugin-transform-vue-jsx babel-plugin-syntax-jsx 解析jsx,前一个插件依赖后面插件
 plugins:
     html-webpack-plugin
-    clean-webpack-plugin
+    clean-webpack-plugin 清理dist
+    progress-bar-webpack-plugin 进度条
 loader:
-    css: 
+    css:
         style-loader
         css-loader
         mini-css-extract-plugin (因为CSS的下载和JS可以并行,当一个HTML文件很大的时候，我们可以把CSS单独提取出来加载)
@@ -20,6 +21,9 @@ loader:
         eslint --init 命令:
             eslint eslint-loader
             eslint-plugin-vue
+    资源：
+        url-loader: url-loader内置了file-loader
+        file-loader
 vue:
     vue 
     vue-loader vue-template-compiler

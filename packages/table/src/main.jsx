@@ -8,26 +8,42 @@ export default {
     ElTableColumn,
   },
   props: {
+    data: {
+      type: Array,
+      default: () => [],
+    },
     columns: {
       type: Array,
       default: () => [],
     },
+    stripe: {
+      type: Boolean,
+      default: true,
+    },
   },
   methods: {
     renderColumn() {
-      return (
+      const columns = [];
+      this.columns.forEach(column => {
+        columns.push(
           <el-table-column
-            label="xxx"
+            prop={column.prop}
+            label={column.label}
           >
           </el-table-column>
-      )
+        );
+      });
+      return columns;
     },
   },
   render(h) {
     return (
-        <el-table>
-          {this.renderColumn(h)}
-        </el-table>
+      <el-table
+        data={this.data}
+        stripe={this.stripe}
+      >
+        {this.renderColumn(h)}
+      </el-table>
     )
   },
 }

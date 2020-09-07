@@ -1,4 +1,5 @@
 import CmTable from '@packages/table/index.js';
+import '@src/styles/index.scss';
 
 const components = [
   CmTable,

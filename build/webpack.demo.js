@@ -1,8 +1,9 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
+const ProgressBarPlugin = require('progress-bar-webpack-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const config = require('./config');
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -44,12 +45,18 @@ const webpackConfig = {
       },
       {
         test: /\.(scss|css)$/,
-        exclude: /node_modules/,
         use: [
           isProd ? MiniCssExtractPlugin.loader : 'style-loader',
           'css-loader',
           'sass-loader'
         ],
+      },
+      {
+        test: /\.(svg|otf|ttf|woff2?|eot|gif|png|jpe?g)(\?\S*)?$/,
+        loader: 'file-loader',
+        query: {
+          name: '[name].[ext]',
+        }
       },
     ],
   },
@@ -65,8 +72,12 @@ const webpackConfig = {
       chunkFilename: '[id].css',
     }),
     new VueLoaderPlugin(),
+    new ProgressBarPlugin(),
     new CleanWebpackPlugin(),
   ],
+  optimization: {
+    minimizer: [],
+  },
 };
 
 module.exports = webpackConfig;
