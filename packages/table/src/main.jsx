@@ -22,15 +22,34 @@ export default {
     },
   },
   methods: {
-    renderColumn() {
+    renderColumnSlot(h, columnSetting) {
+      if (columnSetting.render && typeof columnSetting.render === 'function') {
+        return {
+          default: scope => {
+            return columnSetting.render(h, scope.row);
+          }
+        }
+      }
+    },
+    renderColumnHeader(h, columnSetting) {
+      return columnSetting.renderHeader ? columnSetting.renderHeader : null;
+    },
+    renderColumn(h) {
       const columns = [];
-      this.columns.forEach(column => {
+      this.columns.forEach((columnSetting, index) => {
+        const columnKey = `${columnSetting.prop}_${index}`;
+        const renderHeader = this.renderColumnHeader(h, columnSetting);
+        const scopedSlots = this.renderColumnSlot(h, columnSetting);
         columns.push(
-          <el-table-column
-            prop={column.prop}
-            label={column.label}
-          >
-          </el-table-column>
+            <el-table-column
+                key={columnKey}
+                prop={columnSetting.prop}
+                label={columnSetting.label}
+                show-overflow-tooltip
+                render-header={renderHeader}
+                scopedSlots={scopedSlots}
+            >
+            </el-table-column>
         );
       });
       return columns;
@@ -38,12 +57,12 @@ export default {
   },
   render(h) {
     return (
-      <el-table
-        data={this.data}
-        stripe={this.stripe}
-      >
-        {this.renderColumn(h)}
-      </el-table>
+        <el-table
+            data={this.data}
+            stripe={this.stripe}
+        >
+          {this.renderColumn(h)}
+        </el-table>
     )
   },
 }

@@ -38,7 +38,7 @@ module.exports = {
     // Only allow debugger in development
     'no-debugger': process.env.PRE_COMMIT ? 'error' : 'off',
     // Only allow `console.log` in development
-    // 'no-console': ['error', { allow: ['warn', 'error'] }],
+    'no-console': 0, // ['error', { allow: ['warn', 'error'] }],
     'vue/multiline-html-element-content-newline': 'error',
     'vue/singleline-html-element-content-newline': 'error',
     'vue/no-spaces-around-equal-signs-in-attribute': 'error',

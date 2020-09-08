@@ -31,6 +31,13 @@ export default {
       }, {
         label: '年级',
         prop: 'grade_code',
+        render() {
+          return (<span>高三</span>)
+        },
+        // eslint-disable-next-line no-unused-vars
+        renderHeader: (h) => {
+          return (<span style="color: red">选择年级</span>)
+        },
       }, {
         label: '班级',
         prop: 'class_code',
@@ -39,12 +46,20 @@ export default {
         prop: 'score',
       }, {
         label: '操作',
+        render() {
+          return (
+              <div>
+                <button>点击</button>
+                <button>click</button>
+              </div>
+          )
+        },
       }],
       data: [
         {
           name: 'cuimm',
           code: 'S20078201045',
-          address: '山东',
+          address: '山东省济宁市疃里镇疃里疃里',
           age: 18,
           gender: 2,
           'grade_no': '10',
