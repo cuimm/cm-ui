@@ -45,5 +45,9 @@
     "element-theme-chalk": "^2.13.2",
     "element-ui": "^2.13.2",
     "vue": "^2.6.12"
+  },
+  "dependencies": {
+    "@vue/babel-helper-vue-jsx-merge-props": "^1.2.1",
+    "@vue/babel-preset-jsx": "^1.2.4"
   }
 }
