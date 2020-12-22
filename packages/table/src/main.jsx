@@ -1,7 +1,8 @@
-import {isFunction} from '@src/utils/types'
-import {currencyFormatter} from '@src/utils/currency'
 import ElTable from 'element-ui/lib/table'
 import ElTableColumn from 'element-ui/lib/table-column'
+import {isFunction, isNumber} from '@src/utils/types'
+import {currencyFormatter} from '@src/utils/currency'
+import {FORMAT_ENUMS} from './config'
 
 export default {
   name: 'CmTable',
@@ -19,51 +20,79 @@ export default {
       type: Array,
       default: () => []
     },
+    allowSelection: {
+      type: Boolean,
+      default: false,
+    },
+    filter: {
+      type: Object,
+      default: () => {
+      },
+    },
   },
   methods: {
+    renderSelectionColumn(h) { // eslint-disable-line
+      if (this.allowSelection) {
+        return (
+            <el-table-column
+                key="cm_table_selection"
+                type="selection"
+                fixed="left"
+                align="center"
+                width="55"
+                reserve-selection
+            />)
+      }
+    },
     renderColumns(h, columns) {
       const iColumns = []
       for (let index = 0; index < columns.length; index++) {
         let iColumn
-        const column = columns[index]
-        const columnKey = column.key ? column.key : column.prop ? column.prop : index + '_' + index
-        if (column.children && column.children.length) {
-          iColumn = this.renderMultiColumn(h, column, columnKey)
+        const columnSetting = columns[index]
+        const columnKey = this.genColumnKey(columnSetting, index)
+        if (columnSetting.children && columnSetting.children.length) {
+          iColumn = this.renderMultiColumn(h, columnSetting, columnKey)
         } else {
-          iColumn = this.renderColumn(h, column, columnKey)
+          iColumn = this.renderColumn(h, columnSetting, columnKey)
         }
         iColumns.push(iColumn)
       }
       return iColumns
     },
-    renderMultiColumn(h, column, columnKey) {
-      const children = this.renderColumns(h, column.children)
+    renderMultiColumn(h, columnSetting, columnKey) {
+      const children = this.renderColumns(h, columnSetting.children)
       const attrs = {
-        label: column.label,
+        label: columnSetting.label,
         showOverflowTooltip: true,
-        ...column
+        ...columnSetting
       }
       return (
           <el-table-column
-            key={columnKey}
-            {...{attrs: attrs}}
+              key={columnKey}
+              {...{attrs: attrs}}
           >
             {children}
           </el-table-column>
       )
     },
-    renderColumn(h, column, columnKey) {
-      const scopedSlots = this.renderScopeSlots(h, column, columnKey)
+    renderColumn(h, columnSetting, columnKey) {
+      const scopedSlots = this.renderScopeSlots(h, columnSetting, columnKey)
+      const filters = columnSetting.filter && columnSetting.filter.enabled !== false && columnSetting.filter.filters || null
+      const filteredValue = this.getFilteredValue(columnSetting)
       return (
           <el-table-column
               key={columnKey}
-              prop={column.prop}
-              label={column.label}
+              column-key={columnSetting.filter && columnSetting.filter.enabled !== false && columnSetting.filter.key ? columnSetting.filter.key : columnSetting.prop}
+              prop={columnSetting.prop}
+              label={columnSetting.label}
               show-overflow-tooltip
-              formatter={this.renderCell(column).bind(this)}
+              formatter={this.renderCell(columnSetting).bind(this)}
+              filters={filters}
+              filter-multiple={columnSetting.filter && columnSetting.filter.multiple}
+              filtered-value={filteredValue}
               {
                 ...{
-                  attrs: column
+                  attrs: columnSetting
                 }
               }
               scopedSlots={scopedSlots}
@@ -72,38 +101,79 @@ export default {
           </el-table-column>
       )
     },
-    renderScopeSlots(h, column, columnKey) {
-      if (column.render) {
+    renderScopeSlots(h, columnSetting, columnKey) {
+      if (columnSetting.render) {
         return {
           default: scope => {
-            if (column.render) {
-              return column.render(h, scope.row[column.prop], scope.row, column, columnKey)
+            if (columnSetting.render) {
+              return columnSetting.render(h, scope.row[columnSetting.prop], scope.row, columnSetting, columnKey)
             }
           }
         }
       }
       return null
     },
-    renderCell(column) {
+    renderCell(columnSetting) {
       return (row, tableColumn, cellValue, index) => {
-        if (column.formatter && isFunction(column.formatter)) {
-          cellValue = column.formatter(row, tableColumn, cellValue, index)
+        if (columnSetting.formatter && isFunction(columnSetting.formatter)) {
+          cellValue = columnSetting.formatter(row, tableColumn, cellValue, index)
         }
-        if (column.format === 'currency') {
-          const {fractionSize = 2, symbol = '¥'} = column.currencyOptions || {}
-          cellValue = currencyFormatter(cellValue, fractionSize, symbol)
-        }
-        return cellValue
+        return this.formatCellValue(columnSetting, cellValue)
       }
     },
-    formatCellValue(column, cellValue) {
+    formatCellValue(columnSetting, cellValue) {
       let iCellValue = cellValue
-      const format = column.format
-      if (format === 'currency') {
-        const {fractionSize = 2, symbol = '¥'} = column.currencyOptions || {}
+      const format = columnSetting.format || {}
+      if (format.enum === FORMAT_ENUMS.CURRENCY) {
+        const {fractionSize = 2, symbol = '¥'} = format.options || {}
         iCellValue = currencyFormatter(cellValue, fractionSize, symbol)
+      } else if (format.enum === FORMAT_ENUMS.PERCENTAGE && isNumber(cellValue)) {
+        const fractionSize = format.options.fractionSize || 2
+        iCellValue = `${(Number(cellValue) * 100).toFixed(fractionSize)}%`
       }
       return iCellValue
+    },
+    onSelectionChange(selection) {
+      this.$emit('update:selection', selection)
+    },
+    onFilterChange(filters) {
+      const iFilters = {}
+      for (const key in filters) {
+        if (filters.hasOwnProperty(key)) {
+          const targetColumnSetting = this.columns.find(columnSetting => {
+            if (columnSetting.filter && columnSetting.filter.enabled !== false) {
+              if (columnSetting.filter.key === key || columnSetting.prop === key) {
+                return true
+              }
+            }
+            return false
+          })
+          if (targetColumnSetting && targetColumnSetting.filter && !targetColumnSetting.filter.multiple && filters[key] && typeof(filters[key][0]) !== 'undefined') {
+            iFilters[key] = filters[key][0]
+          } else {
+            iFilters[key] = filters[key]
+          }
+        }
+      }
+      this.$emit('filter-change', iFilters)
+    },
+    getFilteredValue(columnSetting) {
+      let filteredValue = []
+      if (columnSetting.filter && columnSetting.filter.enabled !== false) {
+        const filterKey = columnSetting.filter.key || columnSetting.prop
+        if (this.filter[filterKey]) {
+          if (!Array.isArray(this.filter[filterKey])) {
+            filteredValue = [this.filter[filterKey]]
+          } else {
+            filteredValue = this.filter[filterKey]
+          }
+        }
+      }
+      return filteredValue
+    },
+    genColumnKey(columnSetting, index) {
+      const columnKey = columnSetting.key ? columnSetting.key : columnSetting.prop ? columnSetting.prop : index
+      return 'cm_table' + '_' + columnKey + '_' + index
     },
   },
   render(h) {
@@ -113,12 +183,15 @@ export default {
               ref="table"
               data={this.data}
               stripe={true}
+              on-selection-change={this.onSelectionChange}
+              on-filter-change={this.onFilterChange}
               {
                 ...{
                   attrs: Object.assign({}, this.$attrs, this.$props) // 兼容el-table的props
                 }
               }
           >
+            {this.renderSelectionColumn(h)}
             {this.renderColumns(h, this.columns)}
           </el-table>
         </div>

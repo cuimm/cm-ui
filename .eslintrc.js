@@ -45,5 +45,6 @@ module.exports = {
     'vue/script-indent': ['error', 2, { baseIndent: 0, switchCase: 1 }],
     'vue/component-name-in-template-casing': 'off',
     'vue/html-self-closing': 'off',
+    'no-prototype-builtins': 'off',
   }
 };
