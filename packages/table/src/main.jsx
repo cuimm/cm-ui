@@ -1,5 +1,7 @@
-import ElTable from 'element-ui/lib/table';
-import ElTableColumn from 'element-ui/lib/table-column';
+import {isFunction} from '@src/utils/types'
+import {currencyFormatter} from '@src/utils/currency'
+import ElTable from 'element-ui/lib/table'
+import ElTableColumn from 'element-ui/lib/table-column'
 
 export default {
   name: 'CmTable',
@@ -7,6 +9,7 @@ export default {
     ElTable,
     ElTableColumn,
   },
+  inheritAttrs: false,
   props: {
     data: {
       type: Array,
@@ -36,13 +39,15 @@ export default {
     renderMultiColumn(h, column, columnKey) {
       const children = this.renderColumns(h, column.children)
       const attrs = {
-        key: columnKey,
         label: column.label,
         showOverflowTooltip: true,
         ...column
       }
       return (
-          <el-table-column {...{attrs: attrs}}>
+          <el-table-column
+            key={columnKey}
+            {...{attrs: attrs}}
+          >
             {children}
           </el-table-column>
       )
@@ -55,6 +60,7 @@ export default {
               prop={column.prop}
               label={column.label}
               show-overflow-tooltip
+              formatter={this.renderCell(column).bind(this)}
               {
                 ...{
                   attrs: column
@@ -77,6 +83,27 @@ export default {
         }
       }
       return null
+    },
+    renderCell(column) {
+      return (row, tableColumn, cellValue, index) => {
+        if (column.formatter && isFunction(column.formatter)) {
+          cellValue = column.formatter(row, tableColumn, cellValue, index)
+        }
+        if (column.format === 'currency') {
+          const {fractionSize = 2, symbol = '¥'} = column.currencyOptions || {}
+          cellValue = currencyFormatter(cellValue, fractionSize, symbol)
+        }
+        return cellValue
+      }
+    },
+    formatCellValue(column, cellValue) {
+      let iCellValue = cellValue
+      const format = column.format
+      if (format === 'currency') {
+        const {fractionSize = 2, symbol = '¥'} = column.currencyOptions || {}
+        iCellValue = currencyFormatter(cellValue, fractionSize, symbol)
+      }
+      return iCellValue
     },
   },
   render(h) {
